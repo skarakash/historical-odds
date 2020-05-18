@@ -13,6 +13,7 @@ router.post(
         check("password", "Min password lenght is 6").isLength({ min: 6 }),
     ],
     async (req, res) => {
+        console.log(req.body);
         try {
             const errors = validationResult(req);
 
@@ -48,14 +49,12 @@ router.post(
 router.post(
     "/login",
     [
-        check(
-            "email",
-            "Combination of such password and email is not found"
-        ).isEmail(),
+        check("email", "Email is not valid").isEmail(),
         check("password", "Combination of such password and email is not found")
-            .exists,
+            .exists(),
     ],
     async (req, res) => {
+
         try {
             const errors = validationResult(req);
 
@@ -85,14 +84,14 @@ router.post(
 
             const token = jwt.sign(
                 { userId: user.id },
-                config.get("jwtSecret"),
+                config.jwtSecret,
                 { expiresIn: "1h" }
             );
 
             res.json({ token, userId: user.id });
         } catch (error) {
             res.status(500).json({
-                message: "Something went wrong, try again",
+                message: error.message,
             });
         }
     }

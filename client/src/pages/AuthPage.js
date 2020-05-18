@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from "react";
-import "../css/AuthPage.css";
+import React, { useState, useContext } from "react";
+import { AuthContext } from '../context/AuthContext';
 import { Form, Button } from "react-bootstrap";
 import { useHttp } from "../hooks/http.hook";
+import "../css/AuthPage.css";
 
 export const AuthPage = () => {
+    const auth = useContext(AuthContext);
     const { request, error } = useHttp();
     const [form, setForm] = useState({
         email: "",
         password: "",
     });
 
-    useEffect(() => {}, [error]);
+    const [message, setMessage] = useState(null)
 
     const handleFormChange = (event) => {
         event.preventDefault();
@@ -18,12 +20,24 @@ export const AuthPage = () => {
     };
 
     const handleRegistration = async () => {
+
         try {
             const data = await request("api/auth/register", "POST", {
                 ...form,
             });
-            console.log(data);
-        } catch (error) {}
+            setMessage(data.message)
+        } catch (error) { }
+    };
+
+    const handleLogin = async () => {
+
+        try {
+            const data = await request("api/auth/login", "POST", {
+                ...form,
+            });
+            auth.login(data.token, data.userId)
+            setMessage(data.message)
+        } catch (error) { }
     };
 
     return (
@@ -53,13 +67,20 @@ export const AuthPage = () => {
                     controlId="formBasicPassword"
                     className="buttons__wrapper"
                 >
-                    <Button variant="primary" onClick={handleRegistration}>
+                    <Button
+                        variant="primary"
+                        onClick={handleRegistration}>
                         Sign Up
                     </Button>
 
-                    <Button variant="primary">Sign In</Button>
+                    <Button
+                        variant="success"
+                        onClick={handleLogin}>
+                        Sign In
+                    </Button>
                 </Form.Group>
-                <Form.Group>{error}</Form.Group>
+                <Form.Group className="error">{error}</Form.Group>
+                <Form.Group className="message">{message}</Form.Group>
             </Form>
         </div>
     );

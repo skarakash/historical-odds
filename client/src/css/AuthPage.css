@@ -10,3 +10,15 @@
     display: flex;
     justify-content: space-between;
 }
+
+form {
+    min-height: 266px;
+}
+
+.error {
+    color: red;
+}
+
+.message {
+    color: green;
+}
