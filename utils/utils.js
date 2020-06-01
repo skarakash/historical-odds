@@ -1,4 +1,7 @@
+const idx = require('idx');
+
 const getFilteredEventView = match => {
+
     let filteredMatch = {};
 
     const getRes = (obj) => {
@@ -19,11 +22,9 @@ const getFilteredEventView = match => {
         filteredMatch["round"] = m.extra.round;
         filteredMatch["home"] = m.home.name;
         filteredMatch["away"] = m.away.name;
-        filteredMatch["ht_score"] = { home: Number(m.scores[1].home), away: Number(m.scores[1].away) };
-        filteredMatch["ft_score"] = { home: Number(m.scores[2].home), away: Number(m.scores[2].away) };
-        filteredMatch["over"] = Number(m.scores[2].home) + Number(m.scores[2].away) > 2.5 ? 'over' : 'under';
-        filteredMatch["btts"] = (Number(m.scores[2].home) > 0 && Number(m.scores[2].away) > 0) ? 'yes' : 'no';
-
+        filteredMatch["ht_score"] = { home: Number(idx(m, _ => _.scores[1].home)), away: Number(idx(m, _ => _.scores[1].away)) };
+        filteredMatch["ft_score"] = { home: Number(idx(m, _ => _.scores[2].home)), away: Number(idx(m, _ => _.scores[2].away)) };
+        filteredMatch["over"] = Number(idx(m, _ => _.scores[2].home)) + Number(idx(m, _ => _.scores[2].away)) > 2.5 ? 'over' : 'under';
     });
 
     filteredMatch.outcome = getRes(filteredMatch);
@@ -42,6 +43,10 @@ const getOldestOdd = arr => {
 }
 
 const getFilteredEventOdds = odds => {
+    if (!odds || odds.length === 0) {
+        return null;
+    }
+
     const preGameOddsArray = odds.filter(odd => !odd["ss"] && !odd["time_str"]);
     const htGamedOddsArray = odds.filter(odd => (odd["time_str"] === "46" || odd["time_str"] === "47" || odd["time_str"] === "45") && odd["home_od"] !== '-');
 

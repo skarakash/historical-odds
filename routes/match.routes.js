@@ -23,17 +23,13 @@ router.post('/ended', (req, res) => {
             res.status(500).json({
                 message: data.error,
             });
-            return;
+            return
         }
 
 
         data = data.results.map(m => m.id)
 
         res.json(data);
-
-
-
-
     })
 });
 
@@ -69,8 +65,16 @@ router.get('/eventview', (req, res) => {
     Promise.all([eventView, eventOdds]).then(async (values) => {
         let [eventView, eventOdds] = values;
         eventView = getFilteredEventView(eventView.results);
+
+
         eventOdds = getFilteredEventOdds(eventOdds.results.odds["1_1"]);
+
+        if (!eventOdds) {
+            res.status(400).json({ message: "Match has no odds information" });
+            return
+        }
         let eventData = { ...eventView, ...eventOdds }
+
 
         const match = new Match({
             match_id: eventData.match_id,
@@ -92,12 +96,17 @@ router.get('/eventview', (req, res) => {
             ht: eventData.ht,
         });
 
+        if (match.ft_score.home == undefined) {
+            res.status(400).json({ message: "Match has no score information" });
+            return
+        }
+
         const candidate = await Match.findOne({
             match_id: eventData.match_id
         });
 
         if (candidate) {
-            return res.status(400).json({ message: "Match already exists" });
+            return res.status(409).json({ message: "Match already exists" });
         }
 
         await match.save();
