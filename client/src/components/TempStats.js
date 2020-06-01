@@ -43,13 +43,13 @@ export const TempStats = ({ data }) => {
     return (
         <>
             {data && <div><p>{`total: ${numberOfRecords}`}</p>
-                <p>{`numberOfHomeWins ${numberOfHomeWins}`}</p>
-                <p>{`numberOfAwayWins ${numberOfAwayWins}`}</p>
-                <p>{`numberOfDraws ${numberOfDraws}`}</p>
-                <p>{`over2_5: ${over2_5}`}</p>
-                <p>{`under2_5: ${under2_5}`}</p>
-                <p>{`over2: ${over2}`}</p>
-                <p>{`under2: ${under2}`}</p>
+                <p>{`Home Wins:  ${numberOfHomeWins}`}</p>
+                <p>{`Away Wins ${numberOfAwayWins}`}</p>
+                <p>{`Draws ${numberOfDraws}`}</p>
+                <p>{`Over 2.5: ${over2_5}`}</p>
+                <p>{`Under 2.5: ${under2_5}`}</p>
+                <p>{`Over 2: ${over2}`}</p>
+                <p>{`Under 2: ${under2}`}</p>
             </div>}
         </>
     )

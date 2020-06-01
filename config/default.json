@@ -1,5 +1,6 @@
 {
     "port": 8080,
     "mongoURI": "mongodb+srv://serg_ka:highbury@cluster0-luv6a.mongodb.net/historicalodds?retryWrites=true&w=majority",
-    "jwtSecret": "victoria concordia crescit"
+    "jwtSecret": "victoria concordia crescit",
+    "token": "9592-4fLZMMQS4YDdoY"
 }

@@ -1,82 +1,112 @@
 const { Router } = require("express");
 const router = Router();
 const Match = require("../models/match");
+const config = require("config");
+const request = require('request');
+const { getFilteredEventView, getFilteredEventOdds } = require("../utils/utils")
 
-router.post("/add", async (req, res) => {
-    try {
-        const {
-            season,
-            tournament,
-            gw,
-            homeTeam,
-            awayTeam,
-            homeScore,
-            awayScore,
-            totalGoals,
-            hOdds,
-            aOdds,
-            dOdds,
-            o2_5
-        } = req.body;
+
+const token = config.get("token")
+
+
+
+router.post('/ended', (req, res) => {
+    const url = `https://api.betsapi.com/v2/events/ended?sport_id=1&token=${token}&day=${req.body.day}&league_id=${req.body.league_id}`
+
+    request(url, (error, response, body) => {
+        if (error || response.statusCode !== 200) {
+            res.json(error)
+        }
+        let data = JSON.parse(body);
+
+        if (data.success === 0) {
+            res.status(500).json({
+                message: data.error,
+            });
+            return;
+        }
+
+
+        data = data.results.map(m => m.id)
+
+        res.json(data);
+
+
+
+
+    })
+});
+
+
+router.get('/eventview', (req, res) => {
+    const eventView = new Promise((resolve, reject) => {
+        const url = `https://api.betsapi.com/v1/event/view?token=${token}&event_id=${req.query.event_id}`;
+        request(
+            { url },
+            (error, response, body) => {
+                if (error || response.statusCode !== 200) {
+                    res.json(reject(error))
+                }
+                resolve(JSON.parse(body));
+            }
+        )
+    });
+
+    const eventOdds = new Promise((resolve, reject) => {
+        const url = `https://api.betsapi.com/v2/event/odds?token=${token}&event_id=${req.query.event_id}&source=bet365&odds_market=1`;
+        request(
+            { url },
+            (error, response, body) => {
+                if (error || response.statusCode !== 200) {
+                    res.json(reject(error))
+                }
+                resolve(JSON.parse(body));
+            }
+        )
+    });
+
+
+    Promise.all([eventView, eventOdds]).then(async (values) => {
+        let [eventView, eventOdds] = values;
+        eventView = getFilteredEventView(eventView.results);
+        eventOdds = getFilteredEventOdds(eventOdds.results.odds["1_1"]);
+        let eventData = { ...eventView, ...eventOdds }
+
+        const match = new Match({
+            match_id: eventData.match_id,
+            league: eventData.league,
+            round: eventData.round,
+            home: eventData.home,
+            away: eventData.away,
+            ht_score: {
+                home: eventData.ht_score.home,
+                away: eventData.ht_score.away,
+            },
+            ft_score: {
+                home: eventData.ft_score.home,
+                away: eventData.ft_score.away,
+            },
+            over: eventData.over,
+            outcome: eventData.outcome,
+            preGame: eventData.preGame,
+            ht: eventData.ht,
+        });
 
         const candidate = await Match.findOne({
-            season,
-            tournament,
-            homeTeam,
-            awayTeam,
+            match_id: eventData.match_id
         });
 
         if (candidate) {
             return res.status(400).json({ message: "Match already exists" });
         }
 
-        const match = new Match({
-            season,
-            tournament,
-            gw,
-            homeTeam,
-            awayTeam,
-            homeScore,
-            awayScore,
-            totalGoals: homeScore + awayScore,
-            hOdds,
-            aOdds,
-            dOdds,
-            o2_5,
-        });
-
         await match.save();
-        res.status(201).json({ message: "New record has been added" });
-    } catch (error) {
-        res.status(500).json({
-            message: error.message,
-        });
-    }
+
+        res.json(eventData)
+    })
+
+
+
 });
-
-
-router.post("/matches", async (req, res) => {
-    try {
-        const {
-            body
-        } = req;
-
-        const params = {}
-        Object.keys(body).forEach(key => {
-            if (body[key]) {
-                params[key] = body[key]
-            }
-        });
-
-        const matches = await Match.find(params)
-
-        res.status(200).json(matches)
-
-    } catch (error) {
-        res.status(500).json({
-            message: error.message,
-        });
-    }
-})
 
 module.exports = router;
