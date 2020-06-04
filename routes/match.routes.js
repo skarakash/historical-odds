@@ -91,10 +91,13 @@ router.get('/eventview', (req, res) => {
                 away: eventData.ft_score.away,
             },
             over: eventData.over,
+            btts: eventData.btts,
+            fhg: eventData.fhg,
             outcome: eventData.outcome,
-            preGame: eventData.preGame,
-            ht: eventData.ht,
+            opening: eventData.opening,
+            kickoff: eventData.kickoff,
         });
+
 
         if (match.ft_score.home == undefined) {
             res.status(400).json({ message: "Match has no score information" });
@@ -109,7 +112,7 @@ router.get('/eventview', (req, res) => {
             return res.status(409).json({ message: "Match already exists" });
         }
 
-        await match.save();
+        // await match.save();
 
         res.json(eventData)
     })
