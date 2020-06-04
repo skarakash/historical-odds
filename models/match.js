@@ -12,8 +12,9 @@ const schema = new Schema({
     btts: { type: String },
     fhg: { type: String },
     outcome: { type: String },
-    opening: { type: Object },
-    kickoff: { type: Object },
+    start: { type: Object },
+    close: { type: Object },
+    diff: { type: Object },
 });
 
 module.exports = model("Match", schema);
