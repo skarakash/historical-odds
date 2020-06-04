@@ -60,7 +60,7 @@ router.get("/eventview", (req, res) => {
         eventOdds = getFilteredEventOdds(eventOdds.results.odds["1_1"]);
 
         if (!eventOdds) {
-            res.status(400).json({ message: "Match has no odds information" });
+            res.status(400).json({ message: "Match has no odds information." });
             return;
         }
 
