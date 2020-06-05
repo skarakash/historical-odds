@@ -28,7 +28,7 @@ export const StatsPage = () => {
         try {
             const data = await request("api/match/ended", "POST", {
                 ...form,
-                league_id: leagues.PRIMEIRALIGA
+                league_id: leagues.EREDIVISIE
             });
 
             setRes(data)
