@@ -23,7 +23,7 @@ const getFilteredEventView = (match) => {
 
         filteredMatch["match_id"] = m.id;
         filteredMatch["league"] = m.league.name;
-        filteredMatch["round"] = m.extra.round;
+        filteredMatch["round"] = idx(m.extra, _ => _.round) || "~";
         filteredMatch["home"] = m.home.name;
         filteredMatch["away"] = m.away.name;
         filteredMatch["ht_score"] = { home: fh_home, away: fh_away };
@@ -48,12 +48,16 @@ const getFirstCorner = (arr) => {
 };
 
 const getLatestOdd = (arr) => {
+
     const latest = Math.max.apply(
         Math,
         arr.map((o) => o && o["add_time"])
     );
+
+
+
     let latestOddsArray = arr.filter(
-        (odd) => odd && odd["add_time"] === latest
+        (odd) => odd && odd["add_time"] === String(latest)
     );
 
     return latestOddsArray;
@@ -65,7 +69,7 @@ const getOldestOdd = (arr) => {
         arr.map((o) => o && o["add_time"])
     );
     let oldestOddsArray = arr.filter(
-        (odd) => odd && odd["add_time"] === oldest
+        (odd) => odd && odd["add_time"] === String(oldest)
     );
 
     return oldestOddsArray;
@@ -88,22 +92,15 @@ const getFilteredEventOdds = (odds) => {
         mergedOdds.diff = {};
     }
 
-    preGameOddsArray = preGameOddsArray.map((el) => {
-        let numberOdds = {};
-        for (odd in el) {
-            numberOdds[odd] = Number(el[odd]);
-        }
-
-        return numberOdds;
-    });
-
     const openingOdds = getLatestOdd(preGameOddsArray)[0];
     const kickoffOdds = getOldestOdd(preGameOddsArray)[0];
 
+
+
     const diff = {
-        home_od: openingOdds.home_od - kickoffOdds.home_od,
-        draw_od: openingOdds.draw_od - kickoffOdds.draw_od,
-        away_od: openingOdds.away_od - kickoffOdds.away_od,
+        home_od: (openingOdds.home_od - kickoffOdds.home_od).toFixed(3),
+        draw_od: (openingOdds.draw_od - kickoffOdds.draw_od).toFixed(3),
+        away_od: (openingOdds.away_od - kickoffOdds.away_od).toFixed(3),
     };
 
     mergedOdds.kickoffOdds = kickoffOdds;
@@ -112,4 +109,50 @@ const getFilteredEventOdds = (odds) => {
     return mergedOdds;
 };
 
-module.exports = { getFilteredEventView, getFilteredEventOdds };
+const analyseData = data => {
+    if (data.length === 0) {
+        return "Nothing to analyse"
+    }
+
+    const total = data.length;
+    const homeWins = data.filter(game => game.outcome.includes('home')).length
+    const awayWins = data.filter(game => game.outcome.includes('away')).length
+    const draws = data.filter(game => game.outcome.includes('draw')).length
+
+    const btts = data.filter(game => game.btts.includes('yes')).length
+    const over = data.filter(game => game.over.includes('over')).length
+    const under = data.filter(game => game.over.includes('under')).length
+
+
+    return {
+        total,
+        home: `${Math.round((homeWins / total) * 100)}%`,
+        away: `${Math.round((awayWins / total) * 100)}%`,
+        draw: `${Math.round((draws / total) * 100)}%`,
+        btts: `${Math.round((btts / total) * 100)}%`,
+        over: `${Math.round((over / total) * 100)}%`,
+        under: `${Math.round((under / total) * 100)}%`,
+    }
+}
+
+module.exports = { getFilteredEventView, getFilteredEventOdds, analyseData };
+
+
+// let all = Array.from(document.getElementsByClassName('datet')).map(el => el.innerText).filter(el => !el.includes(':'));
+
+
+// let all = Array.from(document.querySelectorAll('.dark.center'));
+// let l = all.map(el => `${el.childNodes[0].childNodes[0].innerText} ${el.childNodes[0].childNodes[2].innerHTML}`);
+// l;
+
+
+// let all = Array.from(document.querySelectorAll('.dark.center'));
+// let l = all.map(el => {
+//     let x = {}
+//     x.country = `${el.childNodes[0].childNodes[0].innerText}`.substring(2);
+//     x.tournament = `${el.childNodes[0].childNodes[2].innerHTML}`
+
+
+//     return x
+// });
+// l;

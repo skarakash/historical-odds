@@ -1,85 +1,74 @@
-import React, { useState } from "react";
-import { useHttp } from "../hooks/http.hook";
-
+import React, { Component } from "react";
 import * as leagues from "../constants"
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/StatsPage.css"
 
 
-export const StatsPage = () => {
+export class StatsPage extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            dates: [],
+            ids: []
+        }
+    }
 
-    const { request, error } = useHttp();
-    const [form, setForm] = useState({
-        day: null
-    });
-
-    const [res, setRes] = useState(null);
-    const [dates, setDates] = useState([])
-    const [eventsView, setEventsView] = useState([])
-
-    const handleFormChange = (event) => {
+    handleFormChange = (event) => {
         event.preventDefault();
-        setForm({ ...form, [event.target.name]: Number(event.target.value) });
+        let dates = event.target.value;
+        dates = dates.split(',')
+        this.setState({
+            dates
+        })
     };
 
-    const handleSubmit = async (e) => {
+    handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            const data = await request("api/match/ended", "POST", {
-                ...form,
-                league_id: leagues.EREDIVISIE
-            });
+        let { dates } = this.state;
 
-            setRes(data)
-            setDates(dates => [...dates, ...data])
-        } catch (error) { }
-    }
-
-    const handleGetEventsViews = async () => {
-        dates.map(async (date) => {
+        dates.forEach(async (day) => {
             try {
-                await fetch(`/api/match/eventview?event_id=${date}`)
-                setDates(dates => dates.filter(d => d !== date))
-            } catch (error) {
-                console.log(error);
-            }
+                let newIds = await fetch(`api/match/ended?day=${day}&league_id=880`);
+                newIds = await newIds.json()
 
+                newIds.forEach(async (id) => {
+                    try {
+                        await fetch(`/api/match/eventview?event_id=${id}`)
+                    } catch (error) {
+                        console.log(error);
+                    }
+                })
+            } catch (error) { }
         })
+
+
     }
 
-    return (
-        <div className="formWrapper">
-            <form className="oddsForm">
-                <p className="formControl">
-                    <input
-                        placeholder="dates"
-                        name="day"
-                        autoComplete="off"
-                        type="text"
-                        noValidate
-                        onChange={handleFormChange}
-                    />
-                </p>
+    render() {
+        return (
+            <div className="formWrapper">
+                <form className="oddsForm">
+                    <p className="formControl">
+                        <textarea
+                            placeholder="dates"
+                            name="dates"
+                            autoComplete="off"
+                            type="text"
+                            noValidate
+                            onChange={this.handleFormChange}
+                        />
+                    </p>
 
 
-                <button onClick={handleSubmit}>
-                    Submit
-                </button>
-            </form>
-
-            <div>
-                {dates.length > 0 && dates.map(el => {
-                    return <span key={el}>{`${el}, `}</span>
-                })}
+                    <button onClick={this.handleSubmit}>
+                        Submit
+                    </button>
+                </form>
             </div>
+        );
+    }
 
-            <div className="getEventsViews">
-                <button onClick={handleGetEventsViews}>Get eventsView</button>
-            </div>
-            <div>
-                <button onClick={() => setDates(dates => [])}>Clear Dates</button>
-            </div>
-        </div>
-    );
 };
+
+export default StatsPage;

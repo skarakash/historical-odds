@@ -1,17 +1,19 @@
 const { Router } = require("express");
 const router = Router();
 const Match = require("../models/match");
+
 const config = require("config");
 const request = require("request");
 const {
     getFilteredEventView,
     getFilteredEventOdds,
+    analyseData
 } = require("../utils/utils");
 
 const token = config.get("token");
 
-router.post("/ended", (req, res) => {
-    const url = `https://api.betsapi.com/v2/events/ended?sport_id=1&token=${token}&day=${req.body.day}&league_id=${req.body.league_id}`;
+router.get("/ended", (req, res) => {
+    const url = `https://api.betsapi.com/v2/events/ended?sport_id=1&token=${token}&day=${req.query.day}&league_id=${req.query.league_id}`;
 
     request(url, (error, response, body) => {
         if (error || response.statusCode !== 200) {
@@ -89,6 +91,7 @@ router.get("/eventview", (req, res) => {
             diff: eventOdds.diff,
         });
 
+
         if (match.ft_score.home == undefined) {
             res.status(400).json({ message: "Match has no score information" });
             return;
@@ -107,5 +110,18 @@ router.get("/eventview", (req, res) => {
         res.json(eventData);
     });
 });
+
+router.get("/stats", async (req, res) => {
+    let matches = await Match.find({
+        "close.home_od": { $regex: req.query.home_od },
+        "close.draw_od": { $regex: req.query.draw_od },
+        "close.away_od": { $regex: req.query.away_od },
+    })
+
+    data = analyseData(matches)
+
+
+    res.json(data);
+})
 
 module.exports = router;
